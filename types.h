@@ -2,6 +2,8 @@
 #define TYPES_H
 
 #include <allegro5/allegro5.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_image.h>
 
@@ -40,6 +42,7 @@ typedef struct {
     ALLEGRO_BITMAP *img;
     unsigned int speed;
     char direction;
+    bool sound_started;
 } Car;
 
 typedef struct {
@@ -50,6 +53,20 @@ typedef struct {
 
 typedef struct {
     int error_code;
+
+    ALLEGRO_SAMPLE *intro_music;
+
+    ALLEGRO_BITMAP *intro_background;
+    ALLEGRO_BITMAP *intro_title;
+
+    ALLEGRO_SAMPLE *step_sound;
+    ALLEGRO_SAMPLE *crash_scream_sound;
+    ALLEGRO_SAMPLE *car_sound;
+    ALLEGRO_SAMPLE *talk_hi_sound;
+    ALLEGRO_SAMPLE *talk_how_are_you_sound;
+    ALLEGRO_SAMPLE *talk_how_day_sound;
+    ALLEGRO_SAMPLE *talk_im_fine_sound;
+    ALLEGRO_SAMPLE *talk_did_you_like_sound;
 
     ALLEGRO_BITMAP *scene;
 
@@ -82,6 +99,11 @@ typedef struct {
     bool active;
     bool redraw;
     int error_code;
+
+    char status;
+
+    bool intro_music_started;
+    ALLEGRO_SAMPLE_ID intro_music_id;
 
     ALLEGRO_TIMER* timer;
     ALLEGRO_EVENT_QUEUE* queue;

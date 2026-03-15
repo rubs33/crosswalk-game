@@ -8,7 +8,11 @@
 #define COLOR_BLACK al_map_rgb(0, 0, 0)
 #define COLOR_WHITE al_map_rgb(255, 255, 255)
 
-void game_draw(Game *game);
+void game_draw(Game *game, Assets *assets);
+
+void draw_intro(Game *game, Assets *assets);
+void draw_stage1(Game *game, Assets *assets);
+
 int compare_y(const void *a, const void *b);
 
 #ifdef DEBUG

@@ -5,6 +5,9 @@
 #include <allegro5/allegro_image.h>
 #include "types.h"
 
+#define STATUS_INTRO 0
+#define STATUS_STAGE1 1
+
 #define NO_CRASH 0
 #define DIRECTION_UP 1
 #define DIRECTION_DOWN 2
@@ -29,12 +32,19 @@
 void init_event(Game *game, Assets *assets);
 void timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets);
 void key_down_event(ALLEGRO_EVENT *event, Game *game, Assets *assets);
+
+void intro_timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets);
+void intro_key_down_event(ALLEGRO_EVENT *event, Game *game, Assets *assets);
+
+void stage1_timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets);
+void stage1_key_down_event(ALLEGRO_EVENT *event, Game *game, Assets *assets);
+
 void display_close_event(ALLEGRO_EVENT *event, Game *game, Assets *assets);
 
 bool on_crosswalk(Player *player);
 bool is_crash(Car *car, Player *player);
 void init_player(Player *player, int x, int y, char dir, ALLEGRO_BITMAP *img);
 void init_car(Car *car, int x, int y, char dir, int speed, ALLEGRO_BITMAP *img);
-void update_car(Car *car, Scene *scene);
+void update_car(Car *car, Scene *scene, Assets *assets);
 
 #endif

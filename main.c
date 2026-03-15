@@ -22,7 +22,9 @@ int main() {
     game_start(&game, &assets);
     while (game.active) {
         game_update(&game, &assets);
-        game_draw(&game);
+        if (game.redraw) {
+            game_draw(&game, &assets);
+        }
     }
 
     printf("Finishing game\n");

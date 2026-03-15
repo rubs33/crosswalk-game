@@ -10,6 +10,8 @@ void init_event(Game *game, Assets *assets) {
 
     game->active = true;
     game->redraw = true;
+    game->status = STATUS_INTRO;
+    game->intro_music_started = false;
 
     game->scene.xmin = 0;
     game->scene.xmax = 1920;
@@ -32,33 +34,58 @@ void init_event(Game *game, Assets *assets) {
  * Timer event
  */
 void timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
+    game->redraw = true;
+
+    if (game->status == STATUS_INTRO) {
+        intro_timer_event(event, game, assets);
+    }
+
+    if (game->status == STATUS_STAGE1) {
+        stage1_timer_event(event, game, assets);
+    }
+}
+
+void intro_timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
+    if (!game->intro_music_started) {
+        game->intro_music_started = true;
+        al_play_sample(assets->intro_music, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, &game->intro_music_id);
+    }
+}
+
+void stage1_timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
     Scene *scene = &game->scene;
     Player *player = &game->player;
     Car *car1 = &game->car1;
     Car *car2 = &game->car2;
 
-    game->redraw = true;
-
-    update_car(car1, scene);
-    update_car(car2, scene);
+    update_car(car1, scene, assets);
+    update_car(car2, scene, assets);
 
     // Crash detection
     if (is_crash(car1, player)) {
         car1->speed = 0;
         if (!on_crosswalk(player)) {
+            if (player->crash == NO_CRASH) {
+                al_play_sample(assets->crash_scream_sound, 1.0, ((float) player->pos.x / (1920.0f - player->size.w)) * 2.0f - 1.0f, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+            }
             player->crash = car1->direction;
         }
     } else if (is_crash(car2, player)) {
         car2->speed = 0;
         if (!on_crosswalk(player)) {
+            if (player->crash == NO_CRASH) {
+                al_play_sample(assets->crash_scream_sound, 1.0, ((float) player->pos.x / (1920.0f - player->size.w)) * 2.0f - 1.0f, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+            }
             player->crash = car2->direction;
         }
     } else {
         if (!car1->speed) {
             car1->speed = MIN_CAR_SPEED + (rand() % (MAX_CAR_SPEED - MIN_CAR_SPEED));
+            car1->sound_started = false;
         }
         if (!car2->speed) {
             car2->speed = MIN_CAR_SPEED + (rand() % (MAX_CAR_SPEED - MIN_CAR_SPEED));
+            car2->sound_started = false;
         }
         player->crash = NO_CRASH;
     }
@@ -88,6 +115,7 @@ void timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
         if (player->frame_walk >= WALK_SPEED) {
             player->step = !player->step;
             player->frame_walk = 0;
+            al_play_sample(assets->step_sound, 1.0, ((float) player->pos.x / (1920.0f - player->size.w)) * 2.0f - 1.0f, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
         }
     } else {
         player->frame_walk = 0;
@@ -147,6 +175,28 @@ void timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
  * Key-down event
  */
 void key_down_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
+    switch (game->status) {
+    case STATUS_INTRO:
+        intro_key_down_event(event, game, assets);
+        break;
+    case STATUS_STAGE1:
+        stage1_key_down_event(event, game, assets);
+        break;
+    }
+}
+
+void intro_key_down_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
+    if (event->keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+        game->active = false;
+    } else if (event->keyboard.keycode == ALLEGRO_KEY_ENTER) {
+        game->status = STATUS_STAGE1;
+    } else if (event->keyboard.keycode == ALLEGRO_KEY_SPACE) {
+        al_stop_sample(&game->intro_music_id);
+        game->status = STATUS_STAGE1;
+    }
+}
+
+void stage1_key_down_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
     if (event->keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
         game->active = false;
     } else if (event->keyboard.keycode == ALLEGRO_KEY_LEFT) {
@@ -157,6 +207,19 @@ void key_down_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
         game->player.direction = DIRECTION_UP;
     } else if (event->keyboard.keycode == ALLEGRO_KEY_DOWN) {
         game->player.direction = DIRECTION_DOWN;
+    }
+
+    // Talks
+    if (event->keyboard.keycode == ALLEGRO_KEY_O) {
+        al_play_sample(assets->talk_hi_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+    } else if (event->keyboard.keycode == ALLEGRO_KEY_T) {
+        al_play_sample(assets->talk_how_are_you_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+    } else if (event->keyboard.keycode == ALLEGRO_KEY_C) {
+        al_play_sample(assets->talk_how_day_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+    } else if (event->keyboard.keycode == ALLEGRO_KEY_E) {
+        al_play_sample(assets->talk_im_fine_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
+    } else if (event->keyboard.keycode == ALLEGRO_KEY_V) {
+        al_play_sample(assets->talk_did_you_like_sound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
     }
 }
 
@@ -234,13 +297,19 @@ void init_car(Car *car, int x, int y, char dir, int speed, ALLEGRO_BITMAP *img) 
 /**
  * Update the car position
  */
-void update_car(Car *car, Scene *scene) {
+void update_car(Car *car, Scene *scene, Assets *assets) {
+    if (!car->sound_started) {
+        car->sound_started = true;
+        al_play_sample(assets->car_sound, 1.4, 0.0, 0.5f + ((float) car->speed - 10.0f) * 1.5f / 30.0f, ALLEGRO_PLAYMODE_ONCE, NULL);
+    }
+
     if (car->direction == DIRECTION_LEFT) {
         car->pos.x -= car->speed;
         if (car->pos.x < -car->size.w) {
             car->pos.x = scene->xmax + (rand() % scene->xmax);
             car->pos.y = STREET_INIT_Y + rand() % (STREET_END_Y - STREET_INIT_Y);
             car->speed = MIN_CAR_SPEED + (rand() % (MAX_CAR_SPEED - MIN_CAR_SPEED));
+            car->sound_started = false;
         }
     } else {
         car->pos.x += car->speed;
@@ -248,6 +317,7 @@ void update_car(Car *car, Scene *scene) {
             car->pos.x = -car->size.w - (rand() % scene->xmax);
             car->pos.y = STREET_INIT_Y + rand() % (STREET_END_Y - STREET_INIT_Y);
             car->speed = MIN_CAR_SPEED + (rand() % (MAX_CAR_SPEED - MIN_CAR_SPEED));
+            car->sound_started = false;
         }
     }
 }

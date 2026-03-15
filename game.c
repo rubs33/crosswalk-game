@@ -1,4 +1,6 @@
 #include <allegro5/allegro5.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
@@ -15,6 +17,22 @@ void game_init(Game *game) {
 
     if (!al_init()) {
         printf("could not initialize allegro\n");
+        game->error_code = 1;
+        return;
+    }
+
+    if (!al_install_audio()) {
+        printf("could not initialize audio\n");
+        game->error_code = 1;
+        return;
+    }
+    if (!al_init_acodec_addon()) {
+        printf("could not initialize audio codecs addon\n");
+        game->error_code = 1;
+        return;
+    }
+    if (!al_reserve_samples(16)) {
+        printf("could not reserve audio channels\n");
         game->error_code = 1;
         return;
     }
@@ -71,26 +89,51 @@ void game_init(Game *game) {
 void game_load_assets(Assets *assets) {
     assets->error_code = 0;
 
-    assets->scene = al_load_bitmap("media/scene.png");
-    assets->car_right = al_load_bitmap("media/car_right1.png");
-    assets->car_left = al_load_bitmap("media/car_left1.png");
-    assets->player_front = al_load_bitmap("media/player_front.png");
-    assets->player_back = al_load_bitmap("media/player_back.png");
-    assets->player_left = al_load_bitmap("media/player_left.png");
-    assets->player_right = al_load_bitmap("media/player_right.png");
-    assets->player_crash_right = al_load_bitmap("media/player_crash_right.png");
-    assets->player_crash_left = al_load_bitmap("media/player_crash_left.png");
-    assets->player_front1 = al_load_bitmap("media/player_front1.png");
-    assets->player_back1 = al_load_bitmap("media/player_back1.png");
-    assets->player_left1 = al_load_bitmap("media/player_left1.png");
-    assets->player_right1 = al_load_bitmap("media/player_right1.png");
-    assets->player_front2 = al_load_bitmap("media/player_front2.png");
-    assets->player_back2 = al_load_bitmap("media/player_back2.png");
-    assets->player_left2 = al_load_bitmap("media/player_left2.png");
-    assets->player_right2 = al_load_bitmap("media/player_right2.png");
+    // Audio
+    assets->intro_music = al_load_sample("media/intro/intro.ogg");
+    assets->step_sound = al_load_sample("media/global/step.wav");
+    assets->talk_hi_sound = al_load_sample("media/global/talk_hi.wav");
+    assets->talk_how_are_you_sound = al_load_sample("media/global/talk_how_are_you.wav");
+    assets->talk_how_day_sound = al_load_sample("media/global/talk_how_day.wav");
+    assets->talk_im_fine_sound = al_load_sample("media/global/talk_im_fine.wav");
+    assets->talk_did_you_like_sound = al_load_sample("media/global/talk_did_you_like.wav");
+    assets->car_sound = al_load_sample("media/stage1/car.wav");
+    assets->crash_scream_sound = al_load_sample("media/stage1/crash_scream.wav");
+
+    // Image
+    assets->intro_background = al_load_bitmap("media/intro/background.png");
+    assets->intro_title = al_load_bitmap("media/intro/title.png");
+
+    assets->scene = al_load_bitmap("media/stage1/scene.png");
+    assets->car_right = al_load_bitmap("media/stage1/car_right1.png");
+    assets->car_left = al_load_bitmap("media/stage1/car_left1.png");
+
+    assets->player_front = al_load_bitmap("media/global/player_front.png");
+    assets->player_back = al_load_bitmap("media/global/player_back.png");
+    assets->player_left = al_load_bitmap("media/global/player_left.png");
+    assets->player_right = al_load_bitmap("media/global/player_right.png");
+    assets->player_crash_right = al_load_bitmap("media/global/player_crash_right.png");
+    assets->player_crash_left = al_load_bitmap("media/global/player_crash_left.png");
+    assets->player_front1 = al_load_bitmap("media/global/player_front1.png");
+    assets->player_back1 = al_load_bitmap("media/global/player_back1.png");
+    assets->player_left1 = al_load_bitmap("media/global/player_left1.png");
+    assets->player_right1 = al_load_bitmap("media/global/player_right1.png");
+    assets->player_front2 = al_load_bitmap("media/global/player_front2.png");
+    assets->player_back2 = al_load_bitmap("media/global/player_back2.png");
+    assets->player_left2 = al_load_bitmap("media/global/player_left2.png");
+    assets->player_right2 = al_load_bitmap("media/global/player_right2.png");
 
     if (
-        !assets->scene
+        !assets->intro_music
+        || !assets->step_sound
+        || !assets->talk_hi_sound
+        || !assets->talk_how_are_you_sound
+        || !assets->talk_how_day_sound
+        || !assets->talk_im_fine_sound
+        || !assets->talk_did_you_like_sound
+        || !assets->car_sound
+        || !assets->crash_scream_sound
+        || !assets->scene
         || !assets->car_right
         || !assets->car_left
         || !assets->player_front

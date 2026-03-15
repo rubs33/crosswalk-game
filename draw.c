@@ -4,17 +4,32 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 #include "draw.h"
+#include "events.h"
 #include "types.h"
 
 /**
  * Draw the elements of the game
  */
-void game_draw(Game *game) {
-    if (!game->redraw) {
-        return;
-    }
+void game_draw(Game *game, Assets *assets) {
     game->redraw = false;
 
+    switch (game->status) {
+    case STATUS_INTRO:
+        draw_intro(game, assets);
+        break;
+    case STATUS_STAGE1:
+        draw_stage1(game, assets);
+    }
+
+    al_flip_display();
+}
+
+void draw_intro(Game *game, Assets *assets) {
+    al_draw_bitmap(assets->intro_background, 0, 0, 0);
+    al_draw_bitmap(assets->intro_title, 280, 400, 0);
+}
+
+void draw_stage1(Game *game, Assets *assets) {
     // Scene
     al_draw_bitmap(game->scene.img, 0, 0, 0);
 
@@ -35,8 +50,6 @@ void game_draw(Game *game) {
     debug_text(game->debug_font, 10, "Car 1:  %d x %d", game->car1.pos.x, game->car1.pos.y);
     debug_text(game->debug_font, 20, "Car 2:  %d x %d", game->car2.pos.x, game->car2.pos.y);
     #endif
-
-    al_flip_display();
 }
 
 /**
