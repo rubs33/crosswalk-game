@@ -59,7 +59,7 @@ void game_init(Game *game) {
         game->error_code = 1;
         return;
     }
-    
+
     #ifdef DEBUG
     game->debug_font = al_create_builtin_font();
     #endif
@@ -88,7 +88,7 @@ void game_load_assets(Assets *assets) {
     assets->player_back2 = al_load_bitmap("media/player_back2.png");
     assets->player_left2 = al_load_bitmap("media/player_left2.png");
     assets->player_right2 = al_load_bitmap("media/player_right2.png");
-    
+
     if (
         !assets->scene
         || !assets->car_right

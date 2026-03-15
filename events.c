@@ -81,7 +81,7 @@ void timer_event(ALLEGRO_EVENT *event, Game *game, Assets *assets) {
     } else {
         player->walking = false;
     }
-    
+
     // Player step
     if (player->walking) {
         player->frame_walk++;

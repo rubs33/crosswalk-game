@@ -14,7 +14,7 @@ void game_draw(Game *game) {
         return;
     }
     game->redraw = false;
-    
+
     // Scene
     al_draw_bitmap(game->scene.img, 0, 0, 0);
 
